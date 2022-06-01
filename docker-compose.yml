@@ -1,0 +1,19 @@
+version: "3"
+services:
+  image_service:
+    build: ./image-service
+    ports:
+      - "7000:7000"
+    networks:
+      - mongo-compose-network
+  user:
+    build:
+      context: ./user-service
+      args:
+        PORT: 8000
+    environment:
+      PORT: 8000
+    network_mode: host
+networks:
+  mongo-compose-network:
+    driver: bridge
