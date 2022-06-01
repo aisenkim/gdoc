@@ -1,11 +1,25 @@
 version: "3"
 services:
-  image_service:
-    build: ./image-service
+  mongodb:
+    image: mongo:latest
     ports:
-      - "7000:7000"
+      - "27017:27017"
     networks:
       - mongo-compose-network
+    volumes:
+      - my_data:/data/db
+  image_service:
+    build: ./image-service
+    environment:
+      WAIT_HOSTS: mongodb:27017
+    ports:
+      - "7000:7000"
+    depends_on:
+      - mongodb
+    networks:
+      - mongo-compose-network
+    links:
+      - mongodb
   user:
     build:
       context: ./user-service
@@ -13,7 +27,88 @@ services:
         PORT: 8000
     environment:
       PORT: 8000
-    network_mode: host
+      WAIT_HOSTS: mongodb:27017
+    depends_on:
+      - mongodb
+    networks:
+      - mongo-compose-network
+    links:
+      - mongodb
+  search:
+    build:
+      context: ./search-service
+      args:
+        PORT: 10100
+    environment:
+      PORT: 10100
+      WAIT_HOSTS: mongodb:27017
+    ports:
+      - "10100:10100"
+    depends_on:
+      - mongodb
+    networks:
+      - mongo-compose-network
+    links:
+      - mongodb
+  indexer1:
+    build:
+      context: ./search-indexer
+      args:
+        PORT: 4600
+    environment:
+      PORT: 4600
+      WAIT_HOSTS: mongodb:27017
+    ports:
+      - "4600:4600"
+    networks:
+      - mongo-compose-network
+  gdoc1:
+    build:
+      context: ./gdoc-service
+      args:
+        PORT: 6000
+    environment:
+      PORT: 6000
+    ports:
+      - "6000:6000"
+    depends_on:
+      - mongodb
+      - sharedb1
+    networks:
+      - mongo-compose-network
+    links:
+      - mongodb
+  sharedb1:
+    build:
+      context: ./sharedb-server
+      args:
+        PORT: 8080
+    environment:
+      PORT: 8080
+    ports:
+      - "8080:8080"
+    networks:
+      - mongo-compose-network
+  nginx:
+    container_name: nginx
+    image: nginx:1.15-alpine
+    restart: always
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf
+      - ./client/build/:/var/www/html/
+    networks:
+      - mongo-compose-network
+    depends_on:
+      - gdoc1
+      - user
+      - image_service
+      - search
+      - indexer1
+      - mongodb
 networks:
   mongo-compose-network:
     driver: bridge
+volumes:
+  my_data:

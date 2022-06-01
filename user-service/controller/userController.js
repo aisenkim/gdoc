@@ -73,14 +73,11 @@ signup = async (req, res) => {
 
     await user.save();
 
-    // TODO - Need to send a url link that user can click on to get verified
-
-    const url = `http://chk.cse356.compas.cs.stonybrook.edu/users/verify?email=${email}&key=${verificationCode}`;
-    // const url = `http://localhost:5000/users/verify?email=${email}&key=${verificationCode}`
+    const url = `${process.env.HOST_URL}/users/verify?email=${email}&key=${verificationCode}`;
 
     // SEND VERIFICATION EMAIL WITH GMAIL
     let info = await transporter.sendMail({
-      from: "chk@chk.cse356.compas.cs.stonybrook.edu", // sender address
+      from: "test@gdoc.com", // sender address
       to: email, // list of receivers
       subject: `Verification email for ${name}`,
       text: `${url}`,
@@ -102,11 +99,11 @@ verify = async (req, res) => {
   email = email.replace(" ", "+");
 
   try {
-    console.log(email)
+    console.log(email);
     let user = await User.findOne({ email });
-    console.log(user)
+    console.log(user);
     if (!user) {
-      console.log("ERROR")
+      console.log("ERROR");
       return res.json({ error: true, message: "Failed to find a user" });
     }
     if (user.verificationCode !== key && key !== "abracadabra") {
@@ -122,7 +119,7 @@ verify = async (req, res) => {
   }
 };
 
-createTestUser = async(req, res) => {
+createTestUser = async (req, res) => {
   res.set("X-CSE356", "61f9c246ca96e9505dd3f812");
 
   const { name, email, password } = req.body;
@@ -142,7 +139,7 @@ createTestUser = async(req, res) => {
       password: hashedPw,
       email,
       verificationCode,
-      verified: true
+      verified: true,
     });
 
     await user.save();
@@ -152,12 +149,12 @@ createTestUser = async(req, res) => {
     console.log(err);
     return res.json({ error: true, message: "Failed to create user" });
   }
-}
+};
 
 module.exports = {
   login,
   logout,
   signup,
   verify,
-  createTestUser
+  createTestUser,
 };

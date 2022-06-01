@@ -9,6 +9,10 @@ This is a google doc clone. Users are able to edit the docs simultaneously using
 
 ## Project Setup
 
+### Pre-Configurations
+
+1. Edit ELASTIC_HOST_URL inside .env in the directory `search-service/` by getting a trial elastic search cloud URL
+
 ---
 
 ## Tech Used
